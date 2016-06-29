@@ -1,10 +1,5 @@
-!
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
+! main alchemy function, based on cegterg.f90
+
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
@@ -186,20 +181,6 @@ SUBROUTINE alchemy( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   !
   CALL mp_sum( hc( :, 1:nbase ), intra_bgrp_comm )
   !
-!  IF ( uspp ) THEN
-!     !
-!     CALL ZGEMM( 'C', 'N', nbase, nbase, kdim, ONE, &
-!                 psi, kdmx, spsi, kdmx, ZERO, sc, nvecx )
-!     !     
-!  ELSE
-!     !
-!     CALL ZGEMM( 'C', 'N', nbase, nbase, kdim, ONE, &
-!                 psi, kdmx, psi, kdmx, ZERO, sc, nvecx )
-!     !
-!  END IF
-!  !
-!  CALL mp_sum( sc( :, 1:nbase ), intra_bgrp_comm )
-!  !
   occ = nelec / 2
   IF ( lrot ) THEN
 
@@ -221,13 +202,6 @@ SUBROUTINE alchemy( npw, npwx, nvec, nvecx, npol, evc, ethr, &
         !
      END DO
      !
-!  ELSE
-     !
-     ! ... diagonalize the reduced hamiltonian
-     !
-!     CALL cdiaghg( nbase, nvec, hc, sc, nvecx, ew, vc )
-     !
-!     e(1:nvec) = ew(1:nvec)
      !
   END IF
   !
