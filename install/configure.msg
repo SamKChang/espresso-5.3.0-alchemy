@@ -8,7 +8,7 @@ The following libraries have been found:
   BLAS_LIBS= -lblas 
   LAPACK_LIBS= -llapack  -lblas 
   @delete@
-  FFT_LIBS= -lfftw3 
+  FFT_LIBS=
   @delete@
   @delete@
 Please check if this is what you expect.
