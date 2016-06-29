@@ -590,7 +590,10 @@ SUBROUTINE electrons_scf ( printout )
         CALL mp_bcast ( dr2, root_pool, inter_pool_comm )
         CALL mp_bcast ( conv_elec, root_pool, inter_pool_comm )
         !
-        if (.not. scf_must_converge .and. idum == niter) conv_elec = .true.
+        if ((.not. scf_must_converge .and. idum == niter) .or. alchemy_pred) then
+           if ( alchemy_pred ) write( stdout, 9130 )
+           conv_elec = .true.
+        end if
         !
         ! ... if convergence is achieved or if the self-consistency error
         ! ... (dr2) is smaller than the estimated error due to diagonalization
@@ -841,6 +844,7 @@ SUBROUTINE electrons_scf ( printout )
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
+9130 FORMAT(/'     Alchemy prediction done' )
   !
   CONTAINS
      !
