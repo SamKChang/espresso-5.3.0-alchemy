@@ -169,7 +169,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, npw, &
        current_k, btype
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, &
-                                   gamma_only, use_para_diag
+                                   gamma_only, use_para_diag, &
+                                   alchemy_pred
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag
@@ -465,9 +466,15 @@ CONTAINS
              !
           ELSE
              !
-             CALL cegterg ( npw, npwx, nbnd, nbndx, npol, evc, ethr, &
-                         okvan, et(1,ik), btype(1,ik), &
-                         notconv, lrot, dav_iter )
+             IF ( alchemy_pred ) THEN
+                CALL alchemy ( npw, npwx, nbnd, nbndx, npol, evc, ethr, &
+                            okvan, et(1,ik), btype(1,ik), &
+                            notconv, lrot, dav_iter )
+             ELSE
+                CALL cegterg ( npw, npwx, nbnd, nbndx, npol, evc, ethr, &
+                            okvan, et(1,ik), btype(1,ik), &
+                            notconv, lrot, dav_iter )
+             END IF
           END IF
           !
           avg_iter = avg_iter + dav_iter

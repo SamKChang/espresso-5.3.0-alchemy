@@ -207,6 +207,10 @@ CONTAINS
       ELSEIF ( trim(card) == 'WANNIER_AC' .and. ( prog == 'WA' )) THEN
          !
          CALL card_wannier_ac( input_line )
+         !
+      ELSEIF (trim(card) == 'ALCHEMY' ) THEN
+         !
+         CALL card_alchemy( input_line )
 
       ELSE
          !
@@ -1865,4 +1869,41 @@ CONTAINS
       RETURN
       !
    END SUBROUTINE card_wannier_ac
+   !
+   !------------------------------------------------------------------------
+   !    BEGIN manual
+   !----------------------------------------------------------------------
+   !
+   !
+   ! TEMPLATE
+   !
+   !      Perform alchemy task
+   !
+   ! Syntax:
+   !
+   !    ALCHEMY reference_run / prediction
+   !
+   !----------------------------------------------------------------------
+   !    END manual
+   !------------------------------------------------------------------------
+   !
+   SUBROUTINE card_alchemy( input_line )
+      !
+      USE control_flags, ONLY : alchemy_ref, alchemy_pred
+      !
+      CHARACTER(len=256) :: input_line, buffer
+      LOGICAL            :: tend,terr, alchemy
+      LOGICAL, EXTERNAL  :: matches
+
+      IF ( matches( "REFERENCE", input_line ) ) THEN
+         CALL infomsg( 'read_cards ', 'ALCHEMY card: Saving wavefunction')
+         alchemy_ref = .TRUE.
+      ELSE IF ( matches( "PREDICTION", input_line ) ) THEN
+         CALL infomsg( 'read_cards ', 'ALCHEMY card: Restart from reference run')
+         alchemy_pred = .TRUE.
+      ELSE
+         CALL errore( 'read_cards', 'not reconized alchemy directive' )
+      END IF
+         
+   END SUBROUTINE card_alchemy
 END MODULE read_cards_module

@@ -1,0 +1,15 @@
+alchemy hack for QuantumEspresso
+
+main function:
+ electrons.f90
+  -> electrons_scf => c_bands.f90 (control restart and save operation)
+ c_bands.f90
+  -> diag_bands_k => alchemy.f90 (cegterg.f90, compute hamiltonian)
+
+interface:
+ control_flags.f90 (add alchemy_flags, default false)
+ read_cards.f90 (add card ALCHEMY to input file)
+  -> subroutine card_alchemy (set control_flag, alchemy_flags to true)
+
+makefile:
+ add alchemy.o to PW makefile

@@ -26,7 +26,7 @@ SUBROUTINE electrons()
   USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
   USE control_flags,        ONLY : tr2, niter, conv_elec, restart, lmd, &
-                                   do_makov_payne
+                                   do_makov_payne, alchemy_ref, alchemy_pred
   USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
                                    iunres, iunefield, seqopn
   USE buffers,              ONLY : save_buffer, close_buffer
@@ -86,16 +86,12 @@ SUBROUTINE electrons()
   !%%%%%%%%%%%%%%%%%%%%  Iterate hybrid functional  %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
-  IF ( restart ) THEN
+  IF ( ( restart .OR. alchemy_pred ) .AND. dft_is_hybrid() ) THEN
      CALL seqopn (iunres, 'restart_e', 'formatted', exst)
-     IF ( exst ) THEN
+     IF ( exst ) THEN  
         ios = 0
         READ (iunres, *, iostat=ios) iter, tr2, dexx
-        IF ( ios /= 0 ) THEN
-           iter = 0
-        ELSE IF ( iter < 0 .OR. iter > niter ) THEN
-           iter = 0
-        ELSE 
+        IF ( alchemy_pred ) THEN
            READ (iunres, *) fock0, fock1, fock2
            ! FIXME: et and wg should be read from xml file
            READ (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
@@ -118,6 +114,35 @@ SUBROUTINE electrons()
            !
            WRITE(stdout,'(5x,"Calculation (EXX) restarted from iteration #", &
                         & i6)') iter 
+        ELSE
+           IF ( ios /= 0 ) THEN
+              iter = 0
+           ELSE IF ( iter < 0 .OR. iter > niter ) THEN
+              iter = 0
+           ELSE 
+              READ (iunres, *) fock0, fock1, fock2
+              ! FIXME: et and wg should be read from xml file
+              READ (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
+              READ (iunres, *) (et(1:nbnd,ik),ik=1,nks)
+              CLOSE ( unit=iunres, status='delete')
+              ! ... if restarting here, exx was already active
+              ! ... initialize stuff for exx
+              first = .false.
+              CALL exxinit()
+              ! FIXME: ugly hack, overwrites exxbuffer from exxinit
+              CALL seqopn (iunres, 'restart_exx', 'unformatted', exst)
+              IF (exst) READ (iunres, iostat=ios) exxbuff
+              IF (ios /= 0) WRITE(stdout,'(5x,"Error in EXX restart!")')
+              !
+              CALL v_of_rho( rho, rho_core, rhog_core, &
+                  ehart, etxc, vtxc, eth, etotefield, charge, v)
+              IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
+              CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
+                            nspin, doublegrid )
+              !
+              WRITE(stdout,'(5x,"Calculation (EXX) restarted from iteration #", &
+                           & i6)') iter 
+           END IF
         END IF
      END IF
      CLOSE ( unit=iunres, status='delete')
@@ -131,6 +156,15 @@ SUBROUTINE electrons()
      ! ... is calculated with the orbitals at previous step (none at first step)
      !
      CALL electrons_scf ( printout )
+     IF ( alchemy_ref .AND. .NOT. dft_is_hybrid() ) THEN
+       WRITE(stdout,'(5x,"Writing restart_e files for alchemy...")')
+       CALL seqopn (iunres, 'restart_e', 'formatted', exst)
+       WRITE (iunres, *) iter-1, tr2, dexx
+       WRITE (iunres, *) fock0, fock1, fock2
+       WRITE (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
+       WRITE (iunres, *) (et(1:nbnd,ik),ik=1,nks)
+       CLOSE (unit=iunres, status='keep')
+     END IF
      !
      IF ( .NOT. dft_is_hybrid() ) RETURN
      !
@@ -152,6 +186,19 @@ SUBROUTINE electrons()
            CLOSE (unit=iunres, status='keep')
         END IF
         RETURN
+     ELSE 
+        IF ( conv_elec .AND. alchemy_ref ) THEN
+           WRITE(stdout,'(5x,"Writing restart_e and restart_exx files for alchemy...")')
+           CALL seqopn (iunres, 'restart_e', 'formatted', exst)
+           WRITE (iunres, *) iter-1, tr2, dexx
+           WRITE (iunres, *) fock0, fock1, fock2
+           WRITE (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
+           WRITE (iunres, *) (et(1:nbnd,ik),ik=1,nks)
+           CLOSE (unit=iunres, status='keep')
+           CALL seqopn (iunres, 'restart_exx', 'unformatted', exst)
+           WRITE (iunres) exxbuff
+           CLOSE (unit=iunres, status='keep')
+        END IF
      END IF
      !
      first =  first .AND. .NOT. exx_is_active ( )
@@ -300,7 +347,8 @@ SUBROUTINE electrons_scf ( printout )
                                    iprint, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
-                                   llondon, scf_must_converge, lxdm, ts_vdw
+                                   llondon, scf_must_converge, lxdm, ts_vdw, &
+                                   alchemy_pred
   USE io_files,             ONLY : iunwfc, iunmix, nwordwfc, output_drho, &
                                    iunres, iunefield, seqopn
   USE buffers,              ONLY : save_buffer, close_buffer
@@ -559,7 +607,7 @@ SUBROUTINE electrons_scf ( printout )
            !
            first = .FALSE.
            !
-           IF ( dr2 < tr2_min ) THEN
+           IF ( dr2 < tr2_min .and. .not. alchemy_pred ) THEN
               !
               WRITE( stdout, '(/,5X,"Threshold (ethr) on eigenvalues was ", &
                                &    "too large:",/,5X,                      &

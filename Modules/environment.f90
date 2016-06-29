@@ -148,7 +148,7 @@ CONTAINS
 
     CALL date_and_tim( cdate, ctime )
     !
-    WRITE( stdout, '(/5X,"Program ",A," starts on ",A9," at ",A9)' ) &
+    WRITE( stdout, '(/5X,"Program ",A," with alchemy starts on ",A9," at ",A9)' ) &
          TRIM(code_version), cdate, ctime
     !
     WRITE( stdout, '(/5X,"This program is part of the open-source Quantum ",&

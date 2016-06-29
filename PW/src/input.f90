@@ -19,7 +19,7 @@ SUBROUTINE iosys()
   USE funct,         ONLY : dft_is_hybrid, dft_has_finite_size_correction, &
                             set_finite_size_volume, get_inlc 
   USE funct,         ONLY: set_exx_fraction, set_screening_parameter
-  USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi
+  USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi, alchemy_pred
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             ry_kbar, amu_ry, bohr_radius_angs, eps8
   USE mp_pools,      ONLY : npool
@@ -1379,7 +1379,9 @@ SUBROUTINE iosys()
   ! ... overwriting what has just been read before from input
   !
   ierr = 1
-  IF ( startingconfig == 'file' )   ierr = read_config_from_file(nat, at_old,omega_old, lmovecell, at, bg, omega, tau)
+  IF ( startingconfig == 'file' .AND. .NOT. alchemy_pred) THEN
+     ierr = read_config_from_file(nat, at_old,omega_old, lmovecell, at, bg, omega, tau)
+  ENDIF
   !
   ! ... read_config_from_file returns 0 if structure successfully read
   ! ... Atomic positions (tau) must be converted to internal units

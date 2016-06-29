@@ -26,6 +26,7 @@ allocate_fft.o \
 allocate_locpot.o \
 allocate_nlpot.o \
 allocate_wfc.o \
+alchemy.o \
 atomic_rho.o \
 atomic_wfc.o \
 atomic_wfc_mod.o \

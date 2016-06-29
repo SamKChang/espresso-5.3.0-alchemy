@@ -19,6 +19,7 @@ MODULE read_pseudo_mod
   USE ions_base,    ONLY: zv
   USE uspp_param,   ONLY: upf, newpseudo, oldvan, nvb
   USE uspp,         ONLY: okvan, nlcc_any
+  USE control_flags,ONLY: alchemy_pred
 
   IMPLICIT NONE
   SAVE
@@ -121,7 +122,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      ! this is where PP files should be located
      !
      ios = 1
-     IF ( pseudo_dir_cur /= ' ' ) THEN
+     IF ( pseudo_dir_cur /= ' ' .AND. .NOT. alchemy_pred ) THEN
         file_pseudo  = TRIM (pseudo_dir_cur) // TRIM (psfile(nt))
         OPEN  (unit = iunps, file = file_pseudo, status = 'old', &
                form = 'formatted', action='read', iostat = ios)
@@ -136,7 +137,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      ! try the original location pseudo_dir, as set in input
      ! (it should already contain a slash at the end)
      !
-     IF ( ios /= 0 ) THEN
+     IF ( ios /= 0 .OR. alchemy_pred ) THEN
         file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
         OPEN  (unit = iunps, file = file_pseudo, status = 'old', &
                form = 'formatted', action='read', iostat = ios)

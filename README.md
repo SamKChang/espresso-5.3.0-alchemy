@@ -1,3 +1,10 @@
+Modified source code of QuantumESPRESSO 5.3.0 for alchemy purpose.
+The detailed comparison can be visualized by github 
+(compare branch)[https://github.com/SamKChang/espresso-5.3.0-alchemy/compare/original-espresso-5.3.0...master].
+
+Original README
+===============
+
 This is the distribution of the Quantum ESPRESSO suite of codes (ESPRESSO: 
 opEn-Source Package for Research in Electronic Structure, Simulation, 
 and Optimization), promoted by the IOM-DEMOCRITOS National Simulation Center 
