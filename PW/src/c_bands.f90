@@ -469,7 +469,7 @@ CONTAINS
              IF ( alchemy_pred ) THEN
                 CALL alchemy ( npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                             okvan, et(1,ik), btype(1,ik), &
-                            notconv, lrot, dav_iter )
+                            notconv, lrot, dav_iter, ik )
              ELSE
                 CALL cegterg ( npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                             okvan, et(1,ik), btype(1,ik), &

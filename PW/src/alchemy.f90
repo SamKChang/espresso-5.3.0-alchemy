@@ -11,7 +11,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE alchemy( npw, npwx, nvec, nvecx, npol, evc, ethr, &
-                    uspp, e, btype, notcnv, lrot, dav_iter )
+                    uspp, e, btype, notcnv, lrot, dav_iter, ik )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -21,10 +21,12 @@ SUBROUTINE alchemy( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   ! ... where H is an hermitean operator, e is a real scalar,
   ! ... S is an overlap matrix, evc is a complex vector
   !
-  USE kinds,         ONLY : DP
-  USE mp_bands,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp, nbgrp
-  USE mp,            ONLY : mp_sum, mp_bcast
-  USE control_flags, ONLY : alchemy_pred
+  USE kinds,          ONLY: DP
+  USE mp_bands,       ONLY: intra_bgrp_comm, inter_bgrp_comm, root_bgrp, nbgrp
+  USE klist,          ONLY: nelec
+  USE mp,             ONLY: mp_sum, mp_bcast
+  USE control_flags,  ONLY: alchemy_pred
+  USE wvfct,          ONLY: nbnd, et
   !
   IMPLICIT NONE
   !
@@ -44,10 +46,18 @@ SUBROUTINE alchemy( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   LOGICAL, INTENT(IN) :: uspp
     ! if .FALSE. : do not calculate S|psi>
   INTEGER, INTENT(IN) :: btype(nvec)
+  ! current k-point
+  INTEGER, INTENT(IN) :: ik
     ! band type ( 1 = occupied, 0 = empty )
   LOGICAL, INTENT(IN) :: lrot
     ! .TRUE. if the wfc have already been rotated
   REAL(DP), INTENT(OUT) :: e(nvec)
+    ! unperturbed eigenvalues
+  REAL(DP) :: e_old(nvec)
+    ! Hamiltonian matrix element for perturbation theory
+  REAL(DP) :: vii, via
+    ! index for alchemy
+  INTEGER :: i, a
     ! contains the estimated roots.
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer number of iterations performed
@@ -58,7 +68,7 @@ SUBROUTINE alchemy( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   INTEGER, PARAMETER :: maxter = 20
     ! maximum number of iterations
   !
-  INTEGER :: kter, nbase, np, kdim, kdmx, n, m, nb1, nbn
+  INTEGER :: kter, nbase, np, kdim, kdmx, n, m, l, nb1, nbn, occ
     ! counter on iterations
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors
@@ -94,6 +104,10 @@ SUBROUTINE alchemy( npw, npwx, nvec, nvecx, npol, evc, ethr, &
     !    the first nvec columns contain the trial eigenvectors
   !
   CALL start_clock( 'alchemy' )
+  ! construct unperturbed eigenvalues
+  DO n = 1, nvec
+     e_old(n) = et(n, ik)
+  END DO
   !
   IF ( nvec > nvecx / 2 ) CALL errore( 'alchemy', 'nvecx is too small', 1 )
   !
@@ -186,16 +200,28 @@ SUBROUTINE alchemy( npw, npwx, nvec, nvecx, npol, evc, ethr, &
 !  !
 !  CALL mp_sum( sc( :, 1:nbase ), intra_bgrp_comm )
 !  !
+  occ = nelec / 2
   IF ( lrot ) THEN
+
+!     KYSC NOTE preparing for second order approximation
+!     need access to unperturbed eigenvalues!
+!     only random phase approximation at the moment
+!     coupled perturbed kohn-sham need to be implemented
+!
+!     DO n = 1, occ
+!        DO m = occ + 1, nbase
+!           print *, m
+!        END DO
+!     END DO
+
+
      DO n = 1, nbase
         !
         e(n) = REAL( hc(n,n) ) ! <<< Alchemical derivatives!!!
         !
-!        vc(n,n) = ONE
-        !
      END DO
      !
-  ELSE
+!  ELSE
      !
      ! ... diagonalize the reduced hamiltonian
      !
