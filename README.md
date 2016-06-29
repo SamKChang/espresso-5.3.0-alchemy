@@ -1,6 +1,6 @@
 Modified source code of QuantumESPRESSO 5.3.0 for alchemy purpose.
 The detailed comparison can be visualized by github 
-(compare branch)[https://github.com/SamKChang/espresso-5.3.0-alchemy/compare/original-espresso-5.3.0...master].
+[compare branch](https://github.com/SamKChang/espresso-5.3.0-alchemy/compare/original-espresso-5.3.0...master).
 
 Original README
 ===============
