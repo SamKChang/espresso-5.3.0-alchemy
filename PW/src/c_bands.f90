@@ -23,7 +23,7 @@ SUBROUTINE c_bands( iter )
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
-  USE control_flags,        ONLY : ethr, isolve, restart
+  USE control_flags,        ONLY : ethr, isolve, restart, alchemy_pred
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc
@@ -52,7 +52,11 @@ SUBROUTINE c_bands( iter )
   IF ( restart ) CALL restart_in_cbands(ik_, ethr, avg_iter, et )
   !
   IF ( isolve == 0 ) THEN
-     WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
+     IF ( alchemy_pred ) THEN
+        WRITE( stdout, '(5X,"Reloading wave function at each k-point")' )
+     ELSE
+        WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
+     END IF
   ELSE IF ( isolve == 1 ) THEN
      WRITE( stdout, '(5X,"CG style diagonalization")')
   ELSE
