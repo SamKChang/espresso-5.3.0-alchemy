@@ -2,6 +2,17 @@ Modified source code of QuantumESPRESSO 5.3.0 for alchemy purpose.
 The detailed comparison can be visualized by github 
 [compare branch](https://github.com/SamKChang/espresso-5.3.0-alchemy/compare/original-espresso-5.3.0...master).
 
+Reference calculation: 
+To save restart files for reference run, use 'ALCHEMY' directive with keyword 'reference', 
+i.e. add "ALCHEMY reference" to pw.x input file
+
+Alchemy prediction: 
+To restart calculations for alchemy prediction, use 'ALCHEMY' directive with keyword 'prediction', 
+i.e. add "ALCHEMY prediction" to pw.x input file
+This requires restart files from reference run. 
+_Note_: full k-point mesh is necessary if the symmetry of reference calculation and prediction calculation
+are different.
+
 Original README
 ===============
 
