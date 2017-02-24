@@ -1,5 +1,5 @@
 # WARNING! 
-k-point restart results are __NOT CONSISTENT__ with CPMD and abinit!
+isolated system with k-points restart results are __NOT CONSISTENT__ with CPMD and abinit!
 
 Modified source code of QuantumESPRESSO 5.3.0 for alchemy purpose.
 The detailed comparison can be visualized by github 
